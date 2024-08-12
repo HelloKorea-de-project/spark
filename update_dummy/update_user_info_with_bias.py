@@ -37,6 +37,9 @@ PARTITION_DATA_LEN = TOTAL_DATA_LEN // num_partitions + 1
 def generate_country():
     return random.choice(countries)
 
+def generate_age():
+    return random.randint(20, 39)
+
 
 def process_user(partition_index):
     # get data index appropriate for the partition
@@ -47,19 +50,20 @@ def process_user(partition_index):
 
     results = []
     for row in users[start:end]:
-        country = generate_country()
+        # country = generate_country()
         results.append((
             row.id,
-            country
+            # country,
+            generate_age()
         ))
     return results
 
 
 processed_rdd = sc.parallelize(range(num_partitions), num_partitions).flatMap(process_user)
-final_df = processed_rdd.toDF(['user_id', 'country'])
+final_df = processed_rdd.toDF(['user_id', 'age'])
 
 final_df = final_df.withColumn("user_id", col("user_id").cast(StringType())) \
-        .withColumn("country", col("country").cast(StringType()))
+        .withColumn("age", col("age").cast(LongType()))
 
-final_df.write.parquet("s3://hellokorea-extra-data-zone/source/user/user_information_biased.parquet/")
+final_df.write.parquet("s3://hellokorea-extra-data-zone/source/user/user_information_age_biased.parquet/")
 spark.stop()
